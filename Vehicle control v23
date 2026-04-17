@@ -1,0 +1,70 @@
+--[[
+    Script Name: inFeno BOTZ
+    Version: v23 (Speed + Drift Edition)
+    Description: Advanced Vehicle Control for Roblox
+--]]
+
+local Player = game.Players.LocalPlayer
+local Mouse = Player:GetMouse()
+local UserInputService = game:GetService("UserInputService")
+
+-- Konfigurasi inFeno BOTZ
+local Config = {
+    MaxSpeed = 500,        -- Kecepatan Maksimal
+    Acceleration = 10,     -- Percepatan
+    SteerSensitivity = 0.5, -- Sensitivitas Setir
+    DriftPower = 1.8,      -- Kekuatan Drift
+    IsActive = true
+}
+
+print("inFeno BOTZ v23 Loaded Successfully")
+
+-- Fungsi Utama untuk Mendapatkan Mobil
+local function getVehicle()
+    local character = Player.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local seat = character.Humanoid.SeatPart
+        if seat and seat:IsA("VehicleSeat") then
+            return seat
+        end
+    end
+    return nil
+end
+
+-- Loop Kontrol
+game:GetService("RunService").RenderStepped:Connect(function()
+    if not Config.IsActive then return end
+    
+    local seat = getVehicle()
+    if seat then
+        -- Modifikasi Kecepatan (Speed Hack/Boost)
+        seat.MaxSpeed = Config.MaxSpeed
+        seat.Torque = seat.Torque * Config.Acceleration
+        
+        -- Fitur Drift Sederhana
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+            -- Saat menekan Shift, gesekan ban berkurang untuk efek Drift
+            seat.TurnSpeed = 10 * Config.DriftPower
+            for _, wheel in pairs(seat.Parent:GetDescendants()) do
+                if wheel:IsA("BasePart") and (wheel.Name:find("Wheel") or wheel.Name:find("Tire")) then
+                    wheel.CustomPhysicalProperties = PhysicalProperties.new(0.1, 0.3, 0.5) -- Low Friction
+                end
+            end
+        else
+            -- Kembali ke normal
+            seat.TurnSpeed = 5
+            for _, wheel in pairs(seat.Parent:GetDescendants()) do
+                if wheel:IsA("BasePart") and (wheel.Name:find("Wheel") or wheel.Name:find("Tire")) then
+                    wheel.CustomPhysicalProperties = nil -- Default Friction
+                end
+            end
+        end
+    end
+end)
+
+-- Notifikasi Aktif
+game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "inFeno BOTZ v23",
+    Text = "Vehicle Control Active! Hold SHIFT to Drift.",
+    Duration = 5
+})
